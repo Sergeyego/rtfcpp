@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include "RtfCpp.h"
+#include "rtf/rtfcpp.h"
 #include <QDebug>
 #include <QTcpServer>
 #include <QTcpSocket>

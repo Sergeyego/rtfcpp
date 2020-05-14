@@ -25,15 +25,15 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    RtfCpp.cpp \
     sqlengine.cpp \
-    tablemodel.cpp
+    tablemodel.cpp \
+    rtf/rtfcpp.cpp
 
 HEADERS  += mainwindow.h \
-    RtfCpp.h \
-    rtfdefs.h \
     sqlengine.h \
-    tablemodel.h
+    tablemodel.h \
+    rtf/rtfcpp.h \
+    rtf/rtfdefs.h
 
 FORMS    += mainwindow.ui
 

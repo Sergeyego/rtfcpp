@@ -20,7 +20,7 @@ The above copyright notice and this permission notice shall be included in
     THE SOFTWARE.
 */
 
-#include "RtfCpp.h"
+#include "rtfcpp.h"
 
 RtfWriter::RtfWriter(QObject *parent) : QObject(parent)
 {
@@ -728,7 +728,7 @@ bool RtfWriter::write_paragraphformat()
 
     QString rtfT;
     if ( _rtfParFormat.tabbedText == false ){
-        rtfT=QString("\n%1\\fi%2\\li%3\\ri%4\\sb%5\\sa%6\\sl%7%8 %9")
+        rtfT=QString("\n%1\\fi%2\\li%3\\ri%4\\sb%5\\sa%6\\sl%7%8 {%9}")
                 .arg(text)
                 .arg(_rtfParFormat.firstLineIndent)
                 .arg(_rtfParFormat.leftIndent)
@@ -828,10 +828,10 @@ int RtfWriter::start_tablerow()
             .arg(tblrw)
             .arg(_rtfRowFormat.rowLeftMargin)
             .arg(_rtfRowFormat.rowHeight)
-            .arg(_rtfRowFormat.marginTop)
             .arg(_rtfRowFormat.marginBottom)
             .arg(_rtfRowFormat.marginLeft)
-            .arg(_rtfRowFormat.marginRight);
+            .arg(_rtfRowFormat.marginRight)
+            .arg(_rtfRowFormat.marginTop);
 
     _rtfString+=rtfText;
 
@@ -855,7 +855,7 @@ int RtfWriter::end_tablerow()
 
 
 // Starts new RTF table cell
-int RtfWriter::start_tablecell(int rightMargin, bool begMerg, bool lastMerg, bool begVmerg, bool lastVmerg)
+int RtfWriter::start_tablecell(int rightMargin, TypeMerge horisontalMerge, TypeMerge verticalMerge)
 {
     // Set error flag
     int error = RTF_SUCCESS;
@@ -979,10 +979,17 @@ int RtfWriter::start_tablecell(int rightMargin, bool begMerg, bool lastMerg, boo
     }
 
     QString merg;
-    if (begMerg) merg+= QString("\\clmgf");
-    if (lastMerg) merg+= QString("\\clmrg");
-    if (begVmerg) merg+= QString("\\clvmgf");
-    if (lastVmerg) merg+= QString("\\clvmrg");
+    if (horisontalMerge==RtfWriter::BEGIN_MERGE){
+        merg+= QString("\\clmgf");
+    } else if (horisontalMerge==RtfWriter::MERGE){
+        merg+= QString("\\clmrg");
+    }
+
+    if (verticalMerge==RtfWriter::BEGIN_MERGE){
+        merg+= QString("\\clvmgf");
+    } else if (verticalMerge==RtfWriter::MERGE){
+        merg+= QString("\\clvmrg");
+    }
 
     QString rtfText;
     rtfText=QString("\n\\tcelld%1%2%3%4%5%6%7%8\\cellx%9")
@@ -1297,6 +1304,24 @@ QString RtfWriter::get_shadingname(int shading_type, bool cell)
     return shading;
 }
 
+bool RtfWriter::insert_image(QImage &image, int width, int height)
+{
+    QByteArray arr;
+    QBuffer buffer(&arr);
+    buffer.open(QIODevice::WriteOnly);
+    image.save(&buffer,"PNG");
+    buffer.close();
+    bool ok = !arr.isEmpty();
+    if(ok){
+        QString rtfIm;
+        rtfIm=QString("\n{\\pict\\pngblip\\picwgoal%1\\pichgoal%2\\picscalex%3\\picscaley%4\n").arg(width).arg(height).arg(100).arg(100);
+        rtfIm+=buffer.data().toHex();
+        rtfIm+=QString("}");
+        _rtfString+=rtfIm;
+    }
+    return ok;
+}
+
 void RtfWriter::end_doc()
 {
     _rtfString+=QString("\n\\par}");
@@ -1313,6 +1338,7 @@ void RtfWriter::start_doc()
         error = RTF_DOCUMENTFORMAT_ERROR;
 
     // Create first RTF document section with default formatting
+    _rtfSecFormat.newSection=false;
     write_sectionformat();
 }
 
@@ -1340,5 +1366,15 @@ const QString RtfWriter::encode(const QString &s)
         }
     }
     return so;
+}
+
+int RtfWriter::fromMmSize(double mm)
+{
+    return (mm*1440)/25.4;
+}
+
+double RtfWriter::toMmSize(int size)
+{
+    return (25.4*size)/1440;
 }
 

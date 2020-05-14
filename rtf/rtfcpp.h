@@ -31,11 +31,19 @@ The above copyright notice and this permission notice shall be included in
 #include <QTextCodec>
 #include <QDebug>
 #include <QStringList>
+#include <QImage>
+#include <QBuffer>
 
 class RtfWriter : public QObject
 {
     Q_OBJECT
     public:
+
+    enum TypeMerge {
+        NO_MERGE = 0,
+        BEGIN_MERGE,
+        MERGE
+    };
         explicit RtfWriter(QObject *parent=0);
         ~RtfWriter();
         RTF_DOCUMENT_FORMAT* get_documentformat();							// Gets RTF document formatting properties
@@ -49,7 +57,7 @@ class RtfWriter : public QObject
         void set_defaultformat();											// Sets default RTF document formatting
         int start_tablerow();												// Starts new RTF table row
         int end_tablerow();													// Ends RTF table row
-        int start_tablecell(int rightMargin, bool begMerg=false, bool lastMerg=false, bool begVmerg=false, bool lastVmerg=false);								// Starts new RTF table cell
+        int start_tablecell(int rightMargin, TypeMerge horisontalMerge=RtfWriter::NO_MERGE, TypeMerge verticalMerge=RtfWriter::NO_MERGE);// Starts new RTF table cell
         int end_tablecell();												// Ends RTF table cell
         RTF_TABLEROW_FORMAT* get_tablerowformat();							// Gets RTF table row formatting properties
         void set_tablerowformat(const RTF_TABLEROW_FORMAT &rf);					// Sets RTF table row formatting properties
@@ -57,10 +65,13 @@ class RtfWriter : public QObject
         void set_tablecellformat(const RTF_TABLECELL_FORMAT &cf);					// Sets RTF table cell formatting properties
         QString get_bordername(int border_type);								// Gets border name
         QString get_shadingname(int shading_type, bool cell);					// Gets shading name
+        bool insert_image(QImage &image, int width, int height);				// Loads image from QImage
         void start_doc();
         void end_doc();
         bool saveDoc(QString filename);
         const QString encode(const QString &s);
+        static int fromMmSize(double mm);
+        static double toMmSize(int size);
 
 protected:
         void init();														// Sets global RTF library params
