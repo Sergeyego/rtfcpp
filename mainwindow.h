@@ -12,6 +12,7 @@
 #include <QSettings>
 #include <QMenu>
 #include <QDir>
+#include <QDesktopServices>
 #include "sqlengine.h"
 
 namespace Ui {

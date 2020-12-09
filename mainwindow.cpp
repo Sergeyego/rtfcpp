@@ -504,10 +504,12 @@ void MainWindow::createDoc(TableModel &heater, TableModel &content, QString file
 
     rtfWriter.end_doc();
     rtfWriter.saveDoc(filename);
-    QString cmd=ui->lineEditOffice->text()+" "+filename+" &";
 
+    //QFileInfo fileInfo(filename);
+    //QDesktopServices::openUrl(QUrl::fromLocalFile(fileInfo.absoluteFilePath()));
+
+    QString cmd=ui->lineEditOffice->text()+" "+filename+" &";
     system(cmd.toLocal8Bit().data());
-    //qDebug()<<filename;
 }
 
 void MainWindow::slotNewConnection()
@@ -714,6 +716,37 @@ void MainWindow::slotReadClient()
                             "group by str";
                     sqlParams paramCont;
                     paramCont.push_back(list.at(2).toInt());
+                    ok=SqlEngine::executeQuery(queryCont,paramCont,&content);
+                }
+
+            } else if (list.at(1).toInt()==3) {
+                //подтяжки
+                naklTip=QString::fromUtf8("Подтяжка");
+                QDate dat=QDate::fromString(list.at(2),"dd.MM.yyyy");
+                QString query="select date_part('doy', ? ::date), ? ::date, t.snam, d.nam, ef.nam, et.nam "
+                              "from wire_podt_op as t "
+                              "inner join nakl_doc as d on t.id_doc=d.id "
+                              "inner join nakl_emp as ef on t.id_from=ef.id "
+                              "inner join nakl_emp as et on t.id_to=et.id "
+                              "where t.id = ?";
+                sqlParams param;
+                param.push_back(dat.toString("yyyy-MM-dd"));
+                param.push_back(dat.toString("yyyy-MM-dd"));
+                param.push_back(list.at(3).toInt());
+                ok=SqlEngine::executeQuery(query,param,&heater);
+                if (ok){
+                    QString queryCont="select coalesce(p2.nam, p.nam)||' '|| d.sdim, wp.n_s, wpc.kvo "
+                                      "from wire_podt_cex wpc "
+                                      "inner join wire_podt wp on wp.id =wpc.id_podt "
+                                      "inner join prov_buht pb on pb.id=wp.id_buht "
+                                      "inner join prov_prih pp on pp.id =pb.id_prih "
+                                      "inner join provol p on p.id = pp.id_pr "
+                                      "inner join diam d on d.id = wp.id_diam "
+                                      "left join provol p2 on p2.id = p.id_base "
+                                      "where wpc.id_op = ? and wpc.dat = ? ";
+                    sqlParams paramCont;
+                    paramCont.push_back(list.at(3).toInt());
+                    paramCont.push_back(dat);
                     ok=SqlEngine::executeQuery(queryCont,paramCont,&content);
                 }
 
