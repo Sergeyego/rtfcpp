@@ -4,6 +4,7 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+    a.setWindowIcon(QIcon(":/icon.ico"));
 
     QSystemSemaphore semaphore("<uniq id>", 1);  // создаём семафор
     semaphore.acquire(); // Поднимаем семафор, запрещая другим экземплярам работать с разделяемой памятью

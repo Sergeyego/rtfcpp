@@ -40,8 +40,6 @@ private slots:
     void slotNewConnection();
     void slotReadClient();
     void closeEvent(QCloseEvent *pe);
-    void loadSettings();
-    void saveSettings();
 };
 
 #endif // MAINWINDOW_H

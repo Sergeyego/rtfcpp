@@ -37,5 +37,10 @@ HEADERS  += mainwindow.h \
 
 FORMS    += mainwindow.ui
 
+RC_FILE = ico.rc
+
 RESOURCES += \
     res.qrc
+
+DISTFILES += \
+    ico.rc

@@ -6,9 +6,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    loadSettings();
+
     trayIcon = new QSystemTrayIcon(this);
-    trayIcon->setIcon(QPixmap(":/icon.png"));
+    trayIcon->setIcon(QPixmap(":/icon.ico"));
     trayIcon->show();
     setWindowIcon(trayIcon->icon());
 
@@ -31,13 +31,10 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(tcpServer, SIGNAL(newConnection()),this,SLOT(slotNewConnection()));
     connect(restoreAction, SIGNAL(triggered()), this, SLOT(showNormal()));
     connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
-    connect(ui->cmdSave,SIGNAL(clicked(bool)),this,SLOT(saveSettings()));
-
 }
 
 MainWindow::~MainWindow()
 {
-    saveSettings();
     delete ui;
 }
 
@@ -505,11 +502,8 @@ void MainWindow::createDoc(TableModel &heater, TableModel &content, QString file
     rtfWriter.end_doc();
     rtfWriter.saveDoc(filename);
 
-    //QFileInfo fileInfo(filename);
-    //QDesktopServices::openUrl(QUrl::fromLocalFile(fileInfo.absoluteFilePath()));
-
-    QString cmd=ui->lineEditOffice->text()+" "+filename+" &";
-    system(cmd.toLocal8Bit().data());
+    QFileInfo fileInfo(filename);
+    QDesktopServices::openUrl(QUrl::fromLocalFile(fileInfo.absoluteFilePath()));
 }
 
 void MainWindow::slotNewConnection()
@@ -735,7 +729,7 @@ void MainWindow::slotReadClient()
                 param.push_back(list.at(3).toInt());
                 ok=SqlEngine::executeQuery(query,param,&heater);
                 if (ok){
-                    QString queryCont="select coalesce(p2.nam, p.nam)||' '|| d.sdim, wp.n_s, wpc.kvo "
+                    QString queryCont="select coalesce(p2.nam, p.nam)||' "+QString::fromUtf8("ф")+" '|| d.sdim, wp.n_s, wpc.kvo "
                                       "from wire_podt_cex wpc "
                                       "inner join wire_podt wp on wp.id =wpc.id_podt "
                                       "inner join prov_buht pb on pb.id=wp.id_buht "
@@ -775,18 +769,6 @@ void MainWindow::closeEvent(QCloseEvent *pe)
 {
     this->hide();
     pe->ignore();
-}
-
-void MainWindow::loadSettings()
-{
-    QSettings settings("szsm", "rtfcpp");
-    ui->lineEditOffice->setText(settings.value("office",QString::fromUtf8("libreoffice")).toString());
-}
-
-void MainWindow::saveSettings()
-{
-    QSettings settings("szsm", "rtfcpp");
-    settings.setValue("office",ui->lineEditOffice->text());
 }
 
 
