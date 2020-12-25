@@ -717,7 +717,10 @@ void MainWindow::slotReadClient()
                 //подтяжки
                 naklTip=QString::fromUtf8("Подтяжка");
                 QDate dat=QDate::fromString(list.at(2),"dd.MM.yyyy");
-                QString query="select date_part('doy', ? ::date), ? ::date, t.snam, d.nam, ef.nam, et.nam "
+                QString idt=list.at(3);
+                QStringList lt=idt.split("-");
+                if (lt.size()!=2) return;
+                QString query="select date_part('doy', ? ::date), ? ::date, t.snam ||': '||(select wpt.snam from wire_podt_type wpt where wpt.id = ?), d.nam, ef.nam, et.nam "
                               "from wire_podt_op as t "
                               "inner join nakl_doc as d on t.id_doc=d.id "
                               "inner join nakl_emp as ef on t.id_from=ef.id "
@@ -726,7 +729,8 @@ void MainWindow::slotReadClient()
                 sqlParams param;
                 param.push_back(dat.toString("yyyy-MM-dd"));
                 param.push_back(dat.toString("yyyy-MM-dd"));
-                param.push_back(list.at(3).toInt());
+                param.push_back(lt.at(1).toInt());
+                param.push_back(lt.at(0).toInt());
                 ok=SqlEngine::executeQuery(query,param,&heater);
                 if (ok){
                     QString queryCont="select coalesce(p2.nam, p.nam)||' "+QString::fromUtf8("ф")+" '|| d.sdim, wp.n_s, wpc.kvo "
@@ -737,10 +741,11 @@ void MainWindow::slotReadClient()
                                       "inner join provol p on p.id = pp.id_pr "
                                       "inner join diam d on d.id = wp.id_diam "
                                       "left join provol p2 on p2.id = p.id_base "
-                                      "where wpc.id_op = ? and wpc.dat = ? ";
+                                      "where wpc.id_op = ? and wpc.dat = ? and wp.id_type = ? ";
                     sqlParams paramCont;
-                    paramCont.push_back(list.at(3).toInt());
+                    paramCont.push_back(lt.at(0).toInt());
                     paramCont.push_back(dat);
+                    paramCont.push_back(lt.at(1).toInt());
                     ok=SqlEngine::executeQuery(queryCont,paramCont,&content);
                 }
 
