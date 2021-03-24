@@ -543,9 +543,10 @@ void MainWindow::slotReadClient()
                 if (ok){
                     QString queryCont;
                     if (list.at(3).toInt()==1){
-                        queryCont="select e.marka||' '||"+QString::fromUtf8("'ф'")+"||p.diam, p.n_s, w.kvo from parti_pack as w "
+                        queryCont="select e.marka||' '||"+QString::fromUtf8("'ф'")+"||p.diam ||' ('||ep.pack_ed||')', p.n_s, w.kvo from parti_pack as w "
                                                                                    "inner join parti as p on p.id=w.id_part "
                                                                                    "inner join elrtr as e on e.id=p.id_el "
+                                                                                   "inner join el_pack as ep on ep.id=p.id_pack "
                                                                                    "where w.id_nakl = ? order by w.id";
                     } else if (list.at(3).toInt()==2){
                         queryCont="select e.marka||' '||"+QString::fromUtf8("'ф'")+"||p.diam, p.n_s, w.kvo from parti_break as w "
@@ -572,9 +573,10 @@ void MainWindow::slotReadClient()
                 ok=SqlEngine::executeQuery(query,param,&heater);
                 if (ok){
                     QString queryCont;
-                    queryCont="select e.marka||' '||"+QString::fromUtf8("'ф'")+"||p.diam, p.n_s, w.kvo from prod as w "
+                    queryCont="select e.marka||' '||"+QString::fromUtf8("'ф'")+"||p.diam ||' ('||ep.pack_ed||')', p.n_s, w.kvo from prod as w "
                                                                                "inner join parti as p on p.id=w.id_part "
                                                                                "inner join elrtr as e on e.id=p.id_el "
+                                                                               "inner join el_pack as ep on ep.id=p.id_pack "
                                                                                "where w.id_nakl = ? order by w.id";
                     sqlParams paramCont;
                     paramCont.push_back(list.at(2).toInt());
@@ -591,9 +593,10 @@ void MainWindow::slotReadClient()
                 ok=SqlEngine::executeQuery(query,param,&heater);
                 if (ok){
                     QString queryCont;
-                    queryCont="select e.marka||' '||"+QString::fromUtf8("'ф'")+"||p.diam, p.n_s, w.kvo from prod_self_items as w "
+                    queryCont="select e.marka||' '||"+QString::fromUtf8("'ф'")+"||p.diam ||' ('||ep.pack_ed||')', p.n_s, w.kvo from prod_self_items as w "
                                                                                "inner join parti as p on p.id=w.id_part "
                                                                                "inner join elrtr as e on e.id=p.id_el "
+                                                                               "inner join el_pack as ep on ep.id=p.id_pack "
                                                                                "where w.id_self = ? ";
                     sqlParams paramCont;
                     paramCont.push_back(list.at(2).toInt());
@@ -613,11 +616,13 @@ void MainWindow::slotReadClient()
                 ok=SqlEngine::executeQuery(query,param,&heater);
                 if (ok){
                     QString queryCont;
-                    queryCont=QString::fromUtf8("select 'из '||e.marka||' '||'ф'||p.diam || CASE WHEN (np.id=0) THEN '' ELSE '\nв '||ne.marka||' '||'ф'|| np.diam ||'' END, "
+                    queryCont=QString::fromUtf8("select 'из '||e.marka||' '||'ф'||p.diam ||' ('||ep.pack_ed||')'|| CASE WHEN (np.id=0) THEN '' ELSE '\nв '||ne.marka||' '||'ф'|| np.diam ||' ('||nep.pack_ed||')'||'' END, "
                                                 "'из ' || p.n_s || CASE WHEN (np.id=0) THEN '' ELSE '\nв '||np.n_s END, w.kvo, w.kvo_break from parti_perepack as w "
                                                 "inner join parti as p on p.id=w.id_part "
+                                                "inner join el_pack as ep on ep.id=p.id_pack "
                                                 "inner join elrtr as e on e.id=p.id_el "
                                                 "inner join parti as np on np.id=w.id_new_part "
+                                                "inner join el_pack as nep on nep.id=np.id_pack "
                                                 "inner join elrtr as ne on ne.id=np.id_el "
                                                 "where w.id_nakl = ? ");
                     sqlParams paramCont;
