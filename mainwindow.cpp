@@ -629,6 +629,34 @@ void MainWindow::slotReadClient()
                     paramCont.push_back(list.at(2).toInt());
                     ok=SqlEngine::executeQuery(queryCont,paramCont,&content);
                 }
+            } else if (list.at(1).toInt()==4){
+                //Склад по дням
+                naklTip=QString::fromUtf8("Склад");
+                int id_ist=list.at(3).toInt();
+                QDate dat=QDate::fromString(list.at(2),"dd.MM.yyyy");
+                QString query="select date_part('doy', ? ::date), ? ::date, t.fnam, d.nam, ef.nam, et.nam "
+                              "from prod_nakl_tip as t "
+                              "inner join nakl_doc as d on t.id_doc=d.id "
+                              "inner join nakl_emp as ef on t.id_from=ef.id "
+                              "inner join nakl_emp as et on t.id_to=et.id "
+                              "where t.id = ?";
+                sqlParams param;
+                param.push_back(dat.toString("yyyy-MM-dd"));
+                param.push_back(dat.toString("yyyy-MM-dd"));
+                param.push_back(id_ist);
+                ok=SqlEngine::executeQuery(query,param,&heater);
+                if (ok){
+                    QString queryCont;
+                    queryCont="select e.marka||' '||"+QString::fromUtf8("'ф'")+"||p.diam ||' ('||ep.pack_ed||')', p.n_s, w.kvo from prod as w "
+                                                                               "inner join parti as p on p.id=w.id_part "
+                                                                               "inner join elrtr as e on e.id=p.id_el "
+                                                                               "inner join el_pack as ep on ep.id=p.id_pack "
+                                                                               "where w.id_ist = ? and w.dat = ? order by w.id";
+                    sqlParams paramCont;
+                    paramCont.push_back(id_ist);
+                    paramCont.push_back(dat);
+                    ok=SqlEngine::executeQuery(queryCont,paramCont,&content);
+                }
             }
         } else {
             //Проволока
@@ -691,28 +719,28 @@ void MainWindow::slotReadClient()
                 //переупаковка
                 naklTip=QString::fromUtf8("Переупаковка");
                 QString query="select w.num, w.dat, '"+QString::fromUtf8("Переупаковка")+"', (select d.nam from nakl_doc as d where d.id=1), (select f.nam from nakl_emp as f where f.id=1), NULL "
-                              "from wire_perepack_nakl as w "
-                              "where w.id = ?";
+                                                                                         "from wire_perepack_nakl as w "
+                                                                                         "where w.id = ?";
                 sqlParams param;
                 param.push_back(list.at(2).toInt());
                 ok=SqlEngine::executeQuery(query,param,&heater);
                 if (ok){
                     QString queryCont="select '"+QString::fromUtf8("из ")+"'||pr.nam||' '||'"+QString::fromUtf8("ф")+"'||d.sdim||' '||k.short ||'"+QString::fromUtf8("\n в ")+"' ||rpr.nam||' '|| "
-                            "'"+QString::fromUtf8("ф")+"'||rd.sdim||' '||rk.short as str, NULL, sum(w.m_netto) "
-                            "from wire_perepack as w "
-                            "inner join wire_parti as p on p.id=w.id_wpartisrc "
-                            "inner join wire_parti_m as m on m.id=p.id_m "
-                            "inner join provol as pr on pr.id=m.id_provol "
-                            "inner join diam as d on d.id=m.id_diam "
-                            "inner join wire_pack_kind as k on k.id=p.id_pack "
+                                      "'"+QString::fromUtf8("ф")+"'||rd.sdim||' '||rk.short as str, NULL, sum(w.m_netto) "
+                                                                 "from wire_perepack as w "
+                                                                 "inner join wire_parti as p on p.id=w.id_wpartisrc "
+                                                                 "inner join wire_parti_m as m on m.id=p.id_m "
+                                                                 "inner join provol as pr on pr.id=m.id_provol "
+                                                                 "inner join diam as d on d.id=m.id_diam "
+                                                                 "inner join wire_pack_kind as k on k.id=p.id_pack "
 
-                            "inner join wire_parti as rp on rp.id=w.id_wpartires "
-                            "inner join wire_parti_m as rm on rm.id=rp.id_m "
-                            "inner join provol as rpr on rpr.id=rm.id_provol "
-                            "inner join diam as rd on rd.id=rm.id_diam "
-                            "inner join wire_pack_kind as rk on rk.id=rp.id_pack "
-                            "where w.id_nakl = ? "
-                            "group by str";
+                                                                 "inner join wire_parti as rp on rp.id=w.id_wpartires "
+                                                                 "inner join wire_parti_m as rm on rm.id=rp.id_m "
+                                                                 "inner join provol as rpr on rpr.id=rm.id_provol "
+                                                                 "inner join diam as rd on rd.id=rm.id_diam "
+                                                                 "inner join wire_pack_kind as rk on rk.id=rp.id_pack "
+                                                                 "where w.id_nakl = ? "
+                                                                 "group by str";
                     sqlParams paramCont;
                     paramCont.push_back(list.at(2).toInt());
                     ok=SqlEngine::executeQuery(queryCont,paramCont,&content);
@@ -739,18 +767,51 @@ void MainWindow::slotReadClient()
                 ok=SqlEngine::executeQuery(query,param,&heater);
                 if (ok){
                     QString queryCont="select coalesce(p2.nam, p.nam)||' "+QString::fromUtf8("ф")+" '|| d.sdim, wp.n_s, wpc.kvo "
-                                      "from wire_podt_cex wpc "
-                                      "inner join wire_podt wp on wp.id =wpc.id_podt "
-                                      "inner join prov_buht pb on pb.id=wp.id_buht "
-                                      "inner join prov_prih pp on pp.id =pb.id_prih "
-                                      "inner join provol p on p.id = pp.id_pr "
-                                      "inner join diam d on d.id = wp.id_diam "
-                                      "left join provol p2 on p2.id = p.id_base "
-                                      "where wpc.id_op = ? and wpc.dat = ? and wp.id_type = ? ";
+                                                                                                  "from wire_podt_cex wpc "
+                                                                                                  "inner join wire_podt wp on wp.id =wpc.id_podt "
+                                                                                                  "inner join prov_buht pb on pb.id=wp.id_buht "
+                                                                                                  "inner join prov_prih pp on pp.id =pb.id_prih "
+                                                                                                  "inner join provol p on p.id = pp.id_pr "
+                                                                                                  "inner join diam d on d.id = wp.id_diam "
+                                                                                                  "left join provol p2 on p2.id = p.id_base "
+                                                                                                  "where wpc.id_op = ? and wpc.dat = ? and wp.id_type = ? ";
                     sqlParams paramCont;
                     paramCont.push_back(lt.at(0).toInt());
                     paramCont.push_back(dat);
                     paramCont.push_back(lt.at(1).toInt());
+                    ok=SqlEngine::executeQuery(queryCont,paramCont,&content);
+                }
+
+            } else if (list.at(1).toInt()==4) {
+                //Склад по дням
+                naklTip=QString::fromUtf8("Склад");
+                int id_type=list.at(3).toInt();
+                QDate dat=QDate::fromString(list.at(2),"dd.MM.yyyy");
+                QString query="select date_part('doy', ? ::date), ? ::date, t.fnam, d.nam, ef.nam, et.nam "
+                              "from wire_way_bill_type t "
+                              "inner join nakl_doc as d on t.id_doc=d.id "
+                              "inner join nakl_emp as ef on t.id_from=ef.id "
+                              "inner join nakl_emp as et on t.id_to=et.id "
+                              "where t.id = ?";
+                sqlParams param;
+                param.push_back(dat.toString("yyyy-MM-dd"));
+                param.push_back(dat.toString("yyyy-MM-dd"));
+                param.push_back(id_type);
+                ok=SqlEngine::executeQuery(query,param,&heater);
+
+                if (ok){
+                    QString queryCont="select "+QString::fromUtf8("'проволока '")+"||pr.nam||' '||"+QString::fromUtf8("'ф'")+"||d.sdim||' '||k.short, m.n_s, w.m_netto "
+                                      "from wire_warehouse as w "
+                                      "inner join wire_whs_waybill www on www.id = w.id_waybill "
+                                      "inner join wire_parti as p on p.id=w.id_wparti "
+                                      "inner join wire_parti_m as m on m.id=p.id_m "
+                                      "inner join provol as pr on pr.id=m.id_provol "
+                                      "inner join diam as d on d.id=m.id_diam "
+                                      "inner join wire_pack_kind as k on k.id=p.id_pack "
+                                      "where www.id_type = ? and www.dat = ? order by w.id";
+                    sqlParams paramCont;
+                    paramCont.push_back(id_type);
+                    paramCont.push_back(dat);
                     ok=SqlEngine::executeQuery(queryCont,paramCont,&content);
                 }
 
