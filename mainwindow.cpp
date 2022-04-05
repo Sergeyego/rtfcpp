@@ -647,11 +647,14 @@ void MainWindow::slotReadClient()
                 ok=SqlEngine::executeQuery(query,param,&heater);
                 if (ok){
                     QString queryCont;
-                    queryCont="select e.marka||' '||"+QString::fromUtf8("'ф'")+"||p.diam ||' ('||ep.pack_ed||')', p.n_s, w.kvo from prod as w "
-                                                                               "inner join parti as p on p.id=w.id_part "
-                                                                               "inner join elrtr as e on e.id=p.id_el "
-                                                                               "inner join el_pack as ep on ep.id=p.id_pack "
-                                                                               "where w.id_ist = ? and w.dat = ? order by w.id";
+                    queryCont="select e.marka||' '||'"+QString::fromUtf8("ф")+"'||p.diam ||' ('||ep.pack_ed||')' as nam, p.n_s, sum(w.kvo) "
+                              "from prod as w "
+                              "inner join parti as p on p.id=w.id_part "
+                              "inner join elrtr as e on e.id=p.id_el "
+                              "inner join el_pack as ep on ep.id=p.id_pack "
+                              "where w.id_ist = ? and w.dat = ? "
+                              "group by nam, p.n_s "
+                              "order by nam, p.n_s";
                     sqlParams paramCont;
                     paramCont.push_back(id_ist);
                     paramCont.push_back(dat);
@@ -800,7 +803,7 @@ void MainWindow::slotReadClient()
                 ok=SqlEngine::executeQuery(query,param,&heater);
 
                 if (ok){
-                    QString queryCont="select "+QString::fromUtf8("'проволока '")+"||pr.nam||' '||"+QString::fromUtf8("'ф'")+"||d.sdim||' '||k.short, m.n_s, w.m_netto "
+                    QString queryCont="select '"+QString::fromUtf8("проволока ")+"'||pr.nam||' '||'ф'||d.sdim||' '||k.short as fnam, m.n_s, sum(w.m_netto) "
                                       "from wire_warehouse as w "
                                       "inner join wire_whs_waybill www on www.id = w.id_waybill "
                                       "inner join wire_parti as p on p.id=w.id_wparti "
@@ -808,7 +811,9 @@ void MainWindow::slotReadClient()
                                       "inner join provol as pr on pr.id=m.id_provol "
                                       "inner join diam as d on d.id=m.id_diam "
                                       "inner join wire_pack_kind as k on k.id=p.id_pack "
-                                      "where www.id_type = ? and www.dat = ? order by w.id";
+                                      "where www.id_type = ? and www.dat = ? "
+                                      "group by fnam, m.n_s "
+                                      "order by fnam, m.n_s";
                     sqlParams paramCont;
                     paramCont.push_back(id_type);
                     paramCont.push_back(dat);
