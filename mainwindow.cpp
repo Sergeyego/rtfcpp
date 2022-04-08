@@ -652,7 +652,8 @@ void MainWindow::slotReadClient()
                               "inner join parti as p on p.id=w.id_part "
                               "inner join elrtr as e on e.id=p.id_el "
                               "inner join el_pack as ep on ep.id=p.id_pack "
-                              "where w.id_ist = ? and w.dat = ? "
+                              "inner join prod_nakl pn on pn.id = w.id_nakl "
+                              "where pn.id_ist = ? and pn.dat = ? "
                               "group by nam, p.n_s "
                               "order by nam, p.n_s";
                     sqlParams paramCont;
